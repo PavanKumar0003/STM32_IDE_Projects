@@ -69,6 +69,10 @@ void Error_Handler(void);
 #define Buzzer_GPIO_Port GPIOB
 #define PIR_Sensor_Pin GPIO_PIN_15
 #define PIR_Sensor_GPIO_Port GPIOB
+#define UP_BTN_Pin GPIO_PIN_8
+#define UP_BTN_GPIO_Port GPIOC
+#define DWN_BTN_Pin GPIO_PIN_9
+#define DWN_BTN_GPIO_Port GPIOC
 #define LCD_D3_Pin GPIO_PIN_3
 #define LCD_D3_GPIO_Port GPIOB
 #define LCD_RS_Pin GPIO_PIN_4

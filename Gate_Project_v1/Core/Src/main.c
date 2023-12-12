@@ -59,6 +59,10 @@ osSemaphoreId Sem04Handle;
 /* USER CODE BEGIN PV */
 int IR_Value,PIR_Value,Hours_Int=0;
 char Hours[2],Min[2],Sec[2]; //Time Stamp
+uint8_t Time_Date[8];
+char JQ6500_receiveBuff[5];
+char Vol_Val[2];
+int VolValue;
 
 /* USER CODE END PV */
 
@@ -80,8 +84,12 @@ void Task4_Volume_Change(void const * argument);
 /* USER CODE BEGIN 0 */
 void sendJQ6500Command(uint8_t commandType) {
     uint8_t command[] = {commandType};
-    HAL_UART_Transmit(&huart1, command, sizeof(command), 100);
+    HAL_UART_Transmit(&huart1, command, sizeof(command), 1000);
 }
+
+//void receiveJQ6500Command(void) {
+//    HAL_UART_Receive(&huart1, JQ6500_receiveBuff, sizeof(JQ6500_receiveBuff), 100);
+//}
 
 void Audio_Track_Morning(void){
 	sendJQ6500Command(0x7E);
@@ -154,6 +162,42 @@ void Audio_Track_VolumeSet(void){
 	sendJQ6500Command(0xEF);
 }
 
+void Audio_Track_VolumeUp(void){
+	sendJQ6500Command(0x7E);
+	sendJQ6500Command(0x02);
+	sendJQ6500Command(0x04); //Volume Up
+	sendJQ6500Command(0xEF);
+}
+
+void Audio_Track_VolumeDown(void){
+	sendJQ6500Command(0x7E);
+	sendJQ6500Command(0x02);
+	sendJQ6500Command(0x05); //Volume Down
+	sendJQ6500Command(0xEF);
+}
+
+void Audio_Track_getVolume(void){
+	sendJQ6500Command(0x7E);
+	sendJQ6500Command(0x02);
+	sendJQ6500Command(0x43); //Volume Down
+	sendJQ6500Command(0xEF);
+	HAL_UART_Receive(&huart1, JQ6500_receiveBuff, sizeof(JQ6500_receiveBuff), 1000);
+}
+
+void Audio_Track_Pause(void){
+	sendJQ6500Command(0x7E);
+	sendJQ6500Command(0x02);
+	sendJQ6500Command(0x0E); //Pause Track
+	sendJQ6500Command(0xEF);
+}
+
+void Audio_Track_Play(void){
+	sendJQ6500Command(0x7E);
+	sendJQ6500Command(0x02);
+	sendJQ6500Command(0x0D); //Play Track
+	sendJQ6500Command(0xEF);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -191,6 +235,7 @@ int main(void)
   RM_LCD_Clear();
 
   /*Project Welcome Screen*/
+  //Audio_Track_Play();
   sprintf(apndValue, "Gate Monitoring");  //Hours
   RM_LCD_Write_Str(0,0,apndValue);
   sprintf(apndValue, "V1.0");  //Hours
@@ -409,6 +454,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : UP_BTN_Pin DWN_BTN_Pin */
+  GPIO_InitStruct.Pin = UP_BTN_Pin|DWN_BTN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -446,7 +497,6 @@ void Task2_ReadRTC_WriteLCD_1sec(void const * argument)
 {
   /* USER CODE BEGIN Task2_ReadRTC_WriteLCD_1sec */
 	char apndValue[3];
-	uint8_t Time_Date[8];
 
   /* Infinite loop */
   for(;;)
@@ -459,9 +509,9 @@ void Task2_ReadRTC_WriteLCD_1sec(void const * argument)
 	 //Print Time->HH:MM:SS(Row-1)//RM_LCD_Goto(0,0);
 	 sprintf(apndValue, "%02d",Time_Date[2]-6*(Time_Date[2]>>4));  //Hours
 	 RM_LCD_Write_Str(0,0,apndValue);
+	 strcpy(Hours,apndValue);  //Copy Hours into Hours variable
 	 apndValue[0]=0;
 	 apndValue[1]=0;
-	 strcpy(Hours,apndValue);  //Copy Hours into Hours variable
 
 	 RM_LCD_Write_DATA(':');
 	 sprintf(apndValue, "%02d",Time_Date[1]-6*(Time_Date[1]>>4));
@@ -502,13 +552,16 @@ void Task2_ReadRTC_WriteLCD_1sec(void const * argument)
 void Task3_Gate_Announcement(void const * argument)
 {
   /* USER CODE BEGIN Task3_Gate_Announcement */
+	int Gate_Flag =0;
   /* Infinite loop */
 	char apndValue[3];
 	Audio_Track_VolumeSet();
   for(;;)
   {
 	  osSemaphoreWait(Sem02Handle,osWaitForever);
-	  if(PIR_Value == 0){    //-> Gate Open and IR Trigger
+
+/* Gate Open and IR Trigger */
+	  if(PIR_Value == 0){
 
 		  /*Out going Section*/
 		  if(IR_Value == 0){ //-> IR
@@ -517,61 +570,56 @@ void Task3_Gate_Announcement(void const * argument)
 			  RM_LCD_Clear();
 			  osDelay(1000);
 			  RM_LCD_Write_Str(0,0,"Gate Announce");
-			  RM_LCD_Goto(5,1);
 			  RM_LCD_Write_Str(5,1,"Thank You!");
 			  Audio_Track_ThankYou();  //Thank you Announce
-			  osDelay(1000);
-			  RM_LCD_Clear();
-			  osDelay(1000);
 
-			  while(!PIR_Value){ 	//during GATE OPEN
-				  RM_LCD_Write_Str(5,1,"Close T");
+			  while(!PIR_Value){ 			//during GATE OPEN
+				  osDelay(2000);
 				  Audio_Track_CloseGate();  //Close Gate Announce
-				  osDelay(1000);
-				  RM_LCD_Clear();
-				  osDelay(1000);
 			  }
+
+			  Gate_Flag=1;
 			  RM_LCD_Clear();
+			  if(Gate_Flag){
+			  	Audio_Track_ThankClose();
+			  	Gate_Flag=0;
+			  }
 		  }
 	  }
 
-	  //-> Gate Open
+/* Gate Open */
 	  if(PIR_Value==0){
 		  /*In Coming Section*/
 		  Hours_Int = atoi(Hours);
+
 		  RM_LCD_Clear();
 		  osDelay(1000);
-
 		  RM_LCD_Write_Str(0,0,"Gate Announce");
-		  RM_LCD_Write_Str(0,1,"Good Evening!");
 
-//		  if(Hours>=4 && Hours < 12){
-//			  RM_LCD_Write_Str(0,1,"Good Morning!");
-//			  Audio_Track_Morning();
-//		  }
-//		  else if(Hours>=12 && Hours < 16){
-//			  RM_LCD_Write_Str(0,1,"Good Afternoon!");
-//			  Audio_Track_Afternoon();
-//		  }
-//		  else if(Hours>=16 && Hours < 24){
-//			  RM_LCD_Write_Str(0,1,"Good Evening!");
-//			  Audio_Track_Evening();
-//		  }
-
-		  Audio_Track_Evening();  //Evening Announce
-		  Audio_Track_Welcome();  //Welcome Announce
-		  osDelay(1000);
-		  RM_LCD_Clear();
-		  osDelay(3000);
-
-		  while(!PIR_Value){ 	//during GATE OPEN
-			  RM_LCD_Write_Str(5,1,"Close A");
-			  Audio_Track_CloseGate();  //Close Gate Announce
-			  osDelay(1000);
-			  RM_LCD_Clear();
-			  osDelay(1000);
+		  if(Hours_Int>=4 && Hours_Int < 12){
+			  RM_LCD_Write_Str(0,1,"Good Morning!");
+			  Audio_Track_Morning();
 		  }
+		  else if(Hours_Int>=12 && Hours_Int< 16){
+			  RM_LCD_Write_Str(0,1,"Good Afternoon!");
+			  Audio_Track_Afternoon();
+		  }
+		  else if(Hours_Int>=16 && Hours_Int < 24){
+			  RM_LCD_Write_Str(0,1,"Good Evening!");
+			  Audio_Track_Evening();
+		  }
+
+		  Audio_Track_Welcome();  //Welcome Announce
+		  while(!PIR_Value){ 	//during GATE OPEN
+			  osDelay(2000);
+			  Audio_Track_CloseGate();  //Close Gate Announce
+		  }
+		  Gate_Flag=1;
 		  RM_LCD_Clear();
+		  if(Gate_Flag){
+			  Audio_Track_ThankClose();
+			  Gate_Flag=0;
+		 }
 	  }
 
 	  osDelay(10);
@@ -590,11 +638,27 @@ void Task3_Gate_Announcement(void const * argument)
 void Task4_Volume_Change(void const * argument)
 {
   /* USER CODE BEGIN Task4_Volume_Change */
+	int UP_BTN_Value,DWN_BTN_Value;
   /* Infinite loop */
   for(;;)
   {
-	  osDelay(1);
+	  UP_BTN_Value = HAL_GPIO_ReadPin(GPIOC,UP_BTN_Pin);
+	  DWN_BTN_Value = HAL_GPIO_ReadPin(GPIOC,DWN_BTN_Pin);
 
+	  if(!UP_BTN_Value){
+		  //Audio_Track_Pause();
+		  Audio_Track_VolumeUp();
+	  }
+	  else if(!DWN_BTN_Value){
+		  //Audio_Track_Pause();
+		  Audio_Track_VolumeDown();
+	  }
+	  Audio_Track_getVolume();
+	  osDelay(10);
+	  strcpy(Vol_Val,(JQ6500_receiveBuff+2));
+	  VolValue = atoi(Vol_Val);
+	  RM_LCD_Write_Str(10,1,JQ6500_receiveBuff);
+	  osDelay(10);
   }
   /* USER CODE END Task4_Volume_Change */
 }
