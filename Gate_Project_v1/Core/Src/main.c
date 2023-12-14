@@ -60,9 +60,13 @@ osSemaphoreId Sem04Handle;
 int IR_Value,PIR_Value,Hours_Int=0;
 char Hours[2],Min[2],Sec[2]; //Time Stamp
 uint8_t Time_Date[8];
-char JQ6500_receiveBuff[5];
-char Vol_Val[2];
-int VolValue;
+char JQ6500_receiveBuff[4];
+char Vol_Val[2],str[2];
+
+int VolValue,enter=0,key=00,i=0,key1=2000000;
+char Temp_Value[8];
+uint8_t Time_Date[8];
+uint8_t Mem_Write_data[8]={0x15,0x10,0x11,0x06,0x12,0x12,0x23};
 
 /* USER CODE END PV */
 
@@ -233,6 +237,244 @@ int main(void)
   /* USER CODE BEGIN 2 */
   RM_LCD_Init();
   RM_LCD_Clear();
+
+  /*Clock Config*/
+  for(;i<key1;i++)
+    {
+    if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_10)))
+    {
+  	  HAL_Delay(100);
+    for(;enter<15;)
+    {
+  	  if(enter==1)
+  	  {
+  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)))
+  		  {
+  			  RM_LCD_Goto(0,0);
+  			  HAL_Delay(100);
+  			  Mem_Write_data[2]=key++;
+  			  HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x02,1, (uint8_t *)&Mem_Write_data[2],1,1000);
+  			  HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x02,1, (uint8_t *)&Time_Date[2],1,1000);
+  			  sprintf(Temp_Value, "%02d",Time_Date[2]-6*(Time_Date[2]>>4));
+  			  RM_LCD_PutStr(Temp_Value);
+  			  HAL_Delay(100);
+  			  if(key>24)
+  			  {
+  				  key=0;
+  			  }
+  		  }
+  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_9)))
+  		  {
+  			  RM_LCD_Goto(enter,0);
+  			  HAL_Delay(100);
+  			  Mem_Write_data[2]=(key--);
+  			  HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x02,1, (uint8_t *)&Mem_Write_data[2],1,1000);
+  			  HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x02,1, (uint8_t *)&Time_Date[2],1,1000);
+  			  sprintf(Temp_Value, "%02d",Time_Date[2]-6*(Time_Date[2]>>4));
+  			  RM_LCD_PutStr(Temp_Value);
+  			  HAL_Delay(100);
+  			  if(key<0)
+  			  {
+  				  key=0;
+  			  }
+  		  }
+
+  	  }
+  	  if(enter==3)
+  	  	  {
+  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)))
+  	  		  {
+  	  			RM_LCD_Goto(enter,0);
+  	  			 HAL_Delay(100);
+  	  			 Mem_Write_data[1]=(key++);
+  	  			 HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x01,1, (uint8_t *)&Mem_Write_data[1],1,1000);
+  	  		  	 HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x01,1, (uint8_t *)&Time_Date[1],1,1000);
+  	  		  	 sprintf(Temp_Value, "%02d",Time_Date[1]-6*(Time_Date[1]>>4));
+  	  			 RM_LCD_PutStr(Temp_Value);
+  	  			 HAL_Delay(100);
+  	  			 if(key>59)
+  	  			 {
+  	  				 key=0;
+  	  			 }
+  	  		  }
+
+  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_9)))
+  	  		  {
+  	  			RM_LCD_Goto(enter,0);
+  	  			HAL_Delay(100);
+  	  		  Mem_Write_data[1]=(key--);
+  	  		HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x01,1, (uint8_t *)&Mem_Write_data[1],1,1000);
+  	  		HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x01,1, (uint8_t *)&Time_Date[1],1,1000);
+  	  		sprintf(Temp_Value, "%02d",Time_Date[1]-6*(Time_Date[1]>>4));
+  	  			   		  RM_LCD_PutStr(Temp_Value);
+  	  			   		HAL_Delay(100);
+  	  			   		  if(key<1)
+  	  			   		  {
+  	  			   			  key=0;
+  	  			   		  }
+  	  		  }
+  	  	  }
+  	  if(enter==6)
+  	  	  {
+  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)))
+  	  		  {
+  	  			 RM_LCD_Goto(enter,0);
+  	  			HAL_Delay(100);
+  	  		  Mem_Write_data[0]=(key++);
+  	  		HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x00,1, (uint8_t *)&Mem_Write_data[0],1,1000);
+  	  		HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x00,1, (uint8_t *)&Time_Date[0],1,1000);
+  	  		sprintf(Temp_Value, "%02d",Time_Date[0]-6*(Time_Date[0]>>4));
+  	  			   		  RM_LCD_PutStr(Temp_Value);
+  	  			   		HAL_Delay(100);
+  	  		if(key>59)
+  	  		{
+  	  			key=0;
+  	  		}
+  	  		  }
+  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_9)))
+  	  		  {
+  	  			 RM_LCD_Goto(enter,0);
+  	  			HAL_Delay(100);
+  	  		  Mem_Write_data[0]=(key--);
+  	  		HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x00,1, (uint8_t *)&Mem_Write_data[0],1,1000);
+  	  		HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x00,1, (uint8_t *)&Time_Date[0],1,1000);
+  	  		sprintf(Temp_Value, "%02d",Time_Date[0]-6*(Time_Date[0]>>4));
+  	  			   		  RM_LCD_PutStr(Temp_Value);
+  	  			   		HAL_Delay(100);
+  	  			   		  if(key<1)
+  	  			   		  {
+  	  			   			  key=0;
+  	  			   		  }
+  	  		  }
+  	  	  }
+  	  if(enter==7)
+  	  {
+
+  		  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)))
+  		  	  		  {
+  		  	  			RM_LCD_Goto(0,1);
+  		  	  			HAL_Delay(100);
+  		  	  		Mem_Write_data[4]=(key++);
+  		  	  	HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x04,1, (uint8_t *)&Mem_Write_data[4],1,1000);
+  		  	  HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x04,1, (uint8_t *)&Time_Date[4],1,1000);
+  		  	sprintf(Temp_Value, "%02d",Time_Date[4]-6*(Time_Date[4]>>4));
+  		  		   			RM_LCD_PutStr(Temp_Value);
+  		  		   		HAL_Delay(100);
+  		  	  		if(key>31)
+  		  	  		{
+  		  	  			key=0;
+  		  	  		}
+  		  	  		  }
+  		  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_9)))
+  		  	  		  {
+  		  	  			RM_LCD_Goto(0,1);
+  		  	  			HAL_Delay(100);
+  		 	  	  		Mem_Write_data[4]=(key--);
+  		  	  		    HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x04,1, (uint8_t *)&Mem_Write_data[4],1,1000);
+  		  	  		HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x04,1, (uint8_t *)&Time_Date[4],1,1000);
+  		  	  	sprintf(Temp_Value, "%02d",Time_Date[4]-6*(Time_Date[4]>>4));
+  		  	  		   			RM_LCD_PutStr(Temp_Value);
+  		  	  		   		HAL_Delay(100);
+  		  	  		   			if(key<1)
+  		  	  		   			{
+  		  	  		   				key=0;
+  		  	  		   			}
+  		  	  		  }
+  	  }
+  	  if(enter==9)
+  	  	  {
+  		  RM_LCD_Goto(3,1);
+  	  		  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)))
+  	  		  	  		  {
+  	  		  	  		HAL_Delay(100);
+  	  		  	  		Mem_Write_data[5]=(key++);
+  	  		  	  	HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x05,1, (uint8_t *)&Mem_Write_data[5],1,1000);
+  	  		  	  HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x05,1, (uint8_t *)&Time_Date[5],1,1000);
+  	  		  	sprintf(Temp_Value, "%02d",Time_Date[5]-6*(Time_Date[5]>>4));
+  	  		  		   			RM_LCD_PutStr(Temp_Value);
+  	  		  		   		HAL_Delay(100);
+  	  		  	  		if(key>12)
+  	  		  	  		{
+  	  		  	  			key=0;
+  	  		  	  		}
+  	  		  	  		  }
+  	  		  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_9)))
+  	  		  	  		  {
+  	  		  	  		HAL_Delay(100);
+  	  		 	  	  		Mem_Write_data[5]=(key--);
+  	  		  	  		    HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x05,1, (uint8_t *)&Mem_Write_data[5],1,1000);
+  	  		  	  		HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x05,1, (uint8_t *)&Time_Date[5],1,1000);
+  	  		  	  	sprintf(Temp_Value, "%02d",Time_Date[5]-6*(Time_Date[5]>>4));
+  	  		  	  		   			RM_LCD_PutStr(Temp_Value);
+  	  		  	  		   	HAL_Delay(100);
+  	  		  	  		   			if(key<0)
+  	  		  	  		   			{
+  	  		  	  		   				key=0;
+  	  		  	  		   			}
+  	  		  	  		  }
+  	  	  }
+  	  if(enter==11)
+  	  	  	  {
+  		  RM_LCD_Goto(6,1);
+  	  	  		  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)))
+  	  	  		  	  		  {
+  	  	  		  	  		HAL_Delay(100);
+  	  	  		  	  		Mem_Write_data[6]=(key++);
+  	  	  		  	  	HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x06,1, (uint8_t *)&Mem_Write_data[6],1,1000);
+  	  	  		  	  HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x06,1, (uint8_t *)&Time_Date[6],1,1000);
+  	  	  		  	sprintf(Temp_Value, "%02d",Time_Date[6]-6*(Time_Date[6]>>4));
+  	  	  		  		   			RM_LCD_PutStr(Temp_Value);
+  	  	  		  		   	HAL_Delay(100);
+  	  	  		  	  		  }
+  	  	  		  	  		  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_9)))
+  	  	  		  	  		  {
+  	  	  		  	  		HAL_Delay(100);
+  	  	  		 	  	  		Mem_Write_data[6]=(key--);
+  	  	  		  	  		    HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x06,1, (uint8_t *)&Mem_Write_data[6],1,1000);
+  	  	  		  	  		HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x06,1, (uint8_t *)&Time_Date[6],1,1000);
+  	  	  		  	  	sprintf(Temp_Value, "%02d",Time_Date[6]-6*(Time_Date[6]>>4));
+  	  	  		  	  		   			RM_LCD_PutStr(Temp_Value);
+  	  	  		  	  		   	HAL_Delay(100);
+  	  	  		  	  		  }
+  	  	  	  }
+  	  if(!(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_10)))
+  	  {
+  		  HAL_Delay(200);
+  		  enter++;
+  	  }
+  	  if(enter==2)
+  	  {
+  		  HAL_Delay(100);
+  		  RM_LCD_Goto(enter,0);
+  		  RM_LCD_Write_DATA(':');
+  		  enter++;
+  	  }
+  	  if(enter==5)
+  	  {
+  		  HAL_Delay(100);
+  		  RM_LCD_Goto(enter,0);
+  		  RM_LCD_Write_DATA(':');
+  		  enter++;
+  	  }
+  	  if(enter==8)
+  	  	  {
+  	  		  HAL_Delay(100);
+  	  		  RM_LCD_Goto(2,1);
+  	  		  RM_LCD_Write_DATA(':');
+  	  		  enter++;
+  	  	  }
+  	  if(enter==10)
+  	  	  	  {
+  	  	  		  HAL_Delay(100);
+  	  	  		  RM_LCD_Goto(5,1);
+  	  	  		  RM_LCD_Write_DATA(':');
+  	  	  		  enter++;
+  	  	  	  }
+    }
+    key1=0;
+    }
+    }
+
 
   /*Project Welcome Screen*/
   //Audio_Track_Play();
@@ -454,8 +696,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : UP_BTN_Pin DWN_BTN_Pin */
-  GPIO_InitStruct.Pin = UP_BTN_Pin|DWN_BTN_Pin;
+  /*Configure GPIO pins : UP_BTN_Pin DWN_BTN_Pin PC10 */
+  GPIO_InitStruct.Pin = UP_BTN_Pin|DWN_BTN_Pin|GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -568,11 +810,11 @@ void Task3_Gate_Announcement(void const * argument)
 
 			  /*Thank you Printing*/
 			  RM_LCD_Clear();
-			  osDelay(1000);
+			  osDelay(100);
 			  RM_LCD_Write_Str(0,0,"Gate Announce");
 			  RM_LCD_Write_Str(5,1,"Thank You!");
 			  Audio_Track_ThankYou();  //Thank you Announce
-
+			  osDelay(3000);
 			  while(!PIR_Value){ 			//during GATE OPEN
 				  osDelay(2000);
 				  Audio_Track_CloseGate();  //Close Gate Announce
@@ -593,7 +835,7 @@ void Task3_Gate_Announcement(void const * argument)
 		  Hours_Int = atoi(Hours);
 
 		  RM_LCD_Clear();
-		  osDelay(1000);
+		  osDelay(100);
 		  RM_LCD_Write_Str(0,0,"Gate Announce");
 
 		  if(Hours_Int>=4 && Hours_Int < 12){
@@ -610,6 +852,7 @@ void Task3_Gate_Announcement(void const * argument)
 		  }
 
 		  Audio_Track_Welcome();  //Welcome Announce
+		  osDelay(10000);
 		  while(!PIR_Value){ 	//during GATE OPEN
 			  osDelay(2000);
 			  Audio_Track_CloseGate();  //Close Gate Announce
@@ -645,19 +888,30 @@ void Task4_Volume_Change(void const * argument)
 	  UP_BTN_Value = HAL_GPIO_ReadPin(GPIOC,UP_BTN_Pin);
 	  DWN_BTN_Value = HAL_GPIO_ReadPin(GPIOC,DWN_BTN_Pin);
 
+	  Audio_Track_getVolume();
+	  osDelay(300);
+
 	  if(!UP_BTN_Value){
-		  //Audio_Track_Pause();
+		  Vol_Val[0]=JQ6500_receiveBuff[3];
+		  Vol_Val[1]=JQ6500_receiveBuff[0];
+		  VolValue = strtol(Vol_Val,NULL,16);
+		  sprintf(str,"%d",VolValue);
+
 		  Audio_Track_VolumeUp();
+		  RM_LCD_Write_Str(10,1,str);
+		  osDelay(100);
 	  }
 	  else if(!DWN_BTN_Value){
-		  //Audio_Track_Pause();
+		  Vol_Val[0]=JQ6500_receiveBuff[3];
+		  Vol_Val[1]=JQ6500_receiveBuff[0];
+		  VolValue = strtol(Vol_Val,NULL,16);
+		  sprintf(str,"%d",VolValue);
+
 		  Audio_Track_VolumeDown();
+		  RM_LCD_Write_Str(10,1,str);
+		  osDelay(100);
 	  }
-	  Audio_Track_getVolume();
-	  osDelay(10);
-	  strcpy(Vol_Val,(JQ6500_receiveBuff+2));
-	  VolValue = atoi(Vol_Val);
-	  RM_LCD_Write_Str(10,1,JQ6500_receiveBuff);
+
 	  osDelay(10);
   }
   /* USER CODE END Task4_Volume_Change */
