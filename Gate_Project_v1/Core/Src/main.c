@@ -812,7 +812,7 @@ void Task3_Gate_Announcement(void const * argument)
 			  RM_LCD_Clear();
 			  osDelay(100);
 			  RM_LCD_Write_Str(0,0,"Gate Announce");
-			  RM_LCD_Write_Str(5,1,"Thank You!");
+			  RM_LCD_Write_Str(0,1,"Thank You!");
 			  Audio_Track_ThankYou();  //Thank you Announce
 			  osDelay(3000);
 			  while(!PIR_Value){ 			//during GATE OPEN
